@@ -1,0 +1,122 @@
+<!DOCTYPE HTML>
+
+<html>
+	<head>
+		<title>Projects</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<link rel="stylesheet" href="assets/css/main.css" />
+	</head>
+	<body>
+		<!-- Header -->
+		<header id="header" class="alt">
+			<h1><strong><a href="index.html">Leo Gabriel</a></strong> </h1>
+			<nav id="nav">
+				<ul>
+					<li><a href="index.html">Home</a></li>
+					<li><a href="projects.html">Projects</a></li>
+					<li><a href="resume.html">Resume</a></li>
+					<li><a href="contact.html">Contact</a></li>
+				</ul>
+			</nav>
+		</header>
+
+		<!-- Top -->
+		<div class="topBar">
+			<header class="major special">
+				<h2>Barn door tracker</h2>
+			</header>
+		</div>
+
+		<!-- Projects -->
+		<section id="two" class="wrapper style2 special">
+			<div class="container">
+				<p >Pursuing my interest in atrosphotography, I decided that I would benefit from having a star tracking system. Seeing the prohibitive costs of commercial options I designed and built a barn door tracker: a simplified start tracker that, when aligned with the celestial pole, precisely coutneracts the earth rotation to make stars appear stationary in the frame of the camera mounted to it. This project used a recycled car window motor to power two 3D printed gears in order to spin a nut along a curved threaded rod in order to rotate the camera at a precise speed. The motor was powered off of a laptop’s 5V usb line through an LM317 linear voltage regulator controlled by a 10kΩ potentiometer. This system allowed me to adjust the power and speed of the motor based on the load applied, and to account for any motor degradation over time </p>
+				<br></br>
+				<div class="box alt">
+					<div class="row 50% uniform">
+						<div class="6u" >
+							<div class="hoverContainer" position="relative">
+								<div class="hoverImage">
+									<img src="images/wiring.jpg" />
+								</div>
+								<div class="hoverCaption">
+									<p>This adjustable LM317 linear voltage regulator circuit can fine tune the motor speed. I attached a large scavenged heat sink to the regulator using leftover thermal adhesive and glue</p>
+								</div>
+							</div>
+						</div>
+
+						<div class="6u" >
+							<div class="hoverContainer" position="relative">
+								<div class="hoverImage">
+									<img src="images/clamps.jpg" />
+								</div>
+								<div class="hoverCaption">
+									<p>I created this clamping rig to bend the threaded rod to make the plates move at a constant angular velocity, whcih is more correct than a straight rod whose angular velocity would change as it moves relative to the plates, which intoroduces tangent error</p>
+								</div>
+							</div>
+						</div>
+						<div class="6u" >
+							<div class="hoverContainer" position="relative">
+								<div class="hoverImage">
+									<img src="images/fulltracker.jpg" />
+								</div>
+								<div class="hoverCaption">
+									<p>The full barn door tracker, assembled and mounted on a tripod!</p>
+								</div>
+							</div>
+						</div>
+						<div class="6u" >
+							<div class="hoverContainer" position="relative">
+								<div class="hoverImage">
+									<img src="images/sky.jpg" />
+								</div>
+								<div class="hoverCaption">
+									<p>My first long-exposure photo taken with the barn door tracker: 2 minute exposure at f/1.8, ISO 3200. No significant star trails appeared in the image, and many more are to come!</p>
+								</div>
+							</div>
+						</div>
+
+					</div>
+				</div>	
+				<!-- <div class="row 150%">
+					<div class="image left">
+						<a href="index.html">
+							<img src="images/pic02.jpg" height="250em" />
+						</a>
+					</div>
+					<div class="7u$">
+						<p></p>
+					</div>
+					<div class="6u 12u$(xsmall)">
+						<p>lmaoxd</p>
+					</div>
+					<div class="image right">
+						<a href="index.html">
+							<img src="images/pic03.jpg" height="250em" />
+						</a>
+					</div>
+
+				</div> -->
+			</div>
+		</section>
+
+		<!-- Footer -->
+			<footer id="footer">
+				<div class="container">
+					<ul class="icons">
+						<li><a href="#" class="icon fa-facebook"></a></li>
+						<li><a href="#" class="icon fa-twitter"></a></li>
+						<li><a href="#" class="icon fa-instagram"></a></li>
+					</ul>
+				</div>
+			</footer>
+
+		<!-- Scripts -->
+			<script src="assets/js/jquery.min.js"></script>
+			<script src="assets/js/skel.min.js"></script>
+			<script src="assets/js/util.js"></script>
+			<script src="assets/js/main.js"></script>
+
+	</body>
+</html>
