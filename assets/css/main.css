@@ -224,15 +224,17 @@
 
 	.hoverImage {
 		z-index: 10;
-		position: absolute;
+		position: relative;	
+		display: inline-block;
 	}
 
 	.hoverCaption {
 		text-align: center;
 		z-index: 0;
 		position: absolute;
-		top: 50%;
-		padding: ;
+		top: 35%;
+		padding-left: 2em;
+		padding-right: 2em;
 	}
 
 	.hoverContainer {
