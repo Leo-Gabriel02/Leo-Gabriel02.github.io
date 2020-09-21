@@ -2916,10 +2916,11 @@
 			}
 
 		#header.alt {
-			background-color: transparent;
+			background-color: #dbdbdb;
+			opacity: 80%;
 			border: 0;
 			box-shadow: none;
-			height: 3.25em;
+			height: 4.75em;
 			line-height: 3.25em;
 			position: absolute;
 		}
@@ -2940,7 +2941,7 @@
 			}
 
 				#header.alt nav a {
-					color: #ddd;
+					color: #f7f7f7;
 				}
 
 					#header.alt nav a:active, #header.alt nav a:hover {
