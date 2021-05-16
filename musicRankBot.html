@@ -1,0 +1,68 @@
+<!DOCTYPE HTML>
+
+<html>
+	<head>
+		<title>Music Rank Bot</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<link rel="stylesheet" href="assets/css/main.css" />
+	</head>
+	<body>
+		<!-- Header -->
+		<header id="header" class="alt">
+			<h1><strong><a href="index.html">Leo Gabriel</a></strong> </h1>
+			<nav id="nav">
+				<ul>
+					<li><a href="index.html">Home</a></li>
+					<li><a href="projects.html">Projects</a></li>
+					<li><a href="images/resume.pdf" target="_blank">Resume</a></li>
+					<li><a href="contact.html">Contact</a></li>
+				</ul>
+			</nav>
+		</header>
+
+		<!-- Top -->
+		<div class="topBar">
+			<header class="major special">
+				<h2>Mecanum drivetrain</h2>
+			</header>
+		</div>
+
+		<!-- Projects -->
+		<section id="two" class="wrapper style2 special">
+			<div class="container">
+					<p> This Python Discord bot uses discord.py to listen for when users submit songs or request a playlist. When a song is submitted, it saves a record of the songs submitted and the ID of the message used to submit it in a MongoDB collection. Other users can react to that message to vote on the song, and when someone requests a monthly playlist the bot fetches the messages and songs from the database, tallies the votes, and uses the Spotify API to create a playlist with the most voted songs. The bot is deployed and hosted on Heroku and serves the Mechatronics class of 2025 Discord server among others. Check out the code on my <a href="https://github.com/Leo-Gabriel02/music-rank-bot">GitHub</a></p>
+				<br></br>
+				<div class="box alt">
+					<div class="row 50% uniform">
+						<div class="6u">
+							<span class="image fit" >
+								<img src="images/workingBot.png" class="hoverImage"/>
+								<div class="hoverCaption">
+									<p>An example of the bot commands in use.</p>
+								</div>
+							</span>
+						</div>
+						<div class="6u$">
+							<span class="image fit" >
+								<img src="images/mongo.png" class="hoverImage"/>
+								<div class="hoverCaption">
+									<p>The bot stores data on MongoDB so it persists when Heroku routinely restarts the server. Pictured is the records of two user submissions.</p>
+								</div>
+							</span>
+						</div>
+
+					</div>
+				</div>	
+
+			</div>
+		</section>
+
+		<!-- Scripts -->
+			<script src="assets/js/jquery.min.js"></script>
+			<script src="assets/js/skel.min.js"></script>
+			<script src="assets/js/util.js"></script>
+			<script src="assets/js/main.js"></script>
+
+	</body>
+</html>
