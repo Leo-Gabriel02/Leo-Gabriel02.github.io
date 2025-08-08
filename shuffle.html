@@ -1,26 +1,209 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="utf-8">
-  <title>Spotify Public Playlist Shuffle</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 40px; }
-    #progress { width: 100%; height: 20px; background: #eee; margin-top: 20px; }
-    #progress-bar { height: 100%; background: #1DB954; width: 0%; }
-    #output { margin-top: 20px; }
-  </style>
+<meta charset="UTF-8">
+<title>Spotify Shuffle Queue</title>
+<style>
+  body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
+  button { padding: 1em 2em; font-size: 1.2em; margin: 10px; }
+  .success { background-color: green; color: white; }
+  .error { background-color: red; color: white; }
+  #progressContainer { width: 80%; height: 20px; background-color: #ddd; margin: 20px auto; border-radius: 10px; overflow: hidden; display: none; }
+  #progressBar { height: 100%; width: 0%; background-color: #4caf50; transition: width 0.2s ease; }
+</style>
 </head>
 <body>
-  <h1>Spotify Playlist Shuffler</h1>
-  <button id="login-btn">Login with Spotify</button>
-  <input type="text" id="playlist-id" placeholder="Enter playlist ID">
-  <button id="shuffle-btn" disabled>Shuffle Playlist</button>
 
-  <div id="progress">
-    <div id="progress-bar"></div>
-  </div>
-  <div id="output"></div>
+<h1>Spotify Shuffle Queue</h1>
+<button id="loginBtn">Login with Spotify</button>
+<button id="shuffleBtn" style="display:none;">Shuffle</button>
 
-  <script src="shuffle.js"></script>
+<div id="progressContainer">
+  <div id="progressBar"></div>
+</div>
+
+<script>
+/* ---------------- CONFIG ---------------- */
+const clientId = "f2b3fb7dabb945c0b6938aa0d10dc295"; // From Spotify Dashboard
+const redirectUri = window.location.origin + window.location.pathname; // This page's URL
+const playlistId = "1IhKWSnFKpEn5FZgEnk5uO";
+const scopes = "user-read-playback-state user-modify-playback-state playlist-read-private playlist-read-collaborative";
+
+/* --------- HELPER: PKCE Generator --------- */
+function generateCodeVerifier(length) {
+  let text = '';
+  let possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  for (let i = 0; i < length; i++) {
+    text += possible.charAt(Math.floor(Math.random() * possible.length));
+  }
+  return text;
+}
+
+async function generateCodeChallenge(codeVerifier) {
+  const data = new TextEncoder().encode(codeVerifier);
+  const digest = await crypto.subtle.digest('SHA-256', data);
+  return btoa(String.fromCharCode(...new Uint8Array(digest)))
+    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+/* --------- AUTHENTICATION FLOW --------- */
+async function loginWithSpotify() {
+  const codeVerifier = generateCodeVerifier(128);
+  const codeChallenge = await generateCodeChallenge(codeVerifier);
+
+  localStorage.setItem('code_verifier', codeVerifier);
+
+  const args = new URLSearchParams({
+    response_type: 'code',
+    client_id: clientId,
+    scope: scopes,
+    redirect_uri: redirectUri,
+    code_challenge_method: 'S256',
+    code_challenge: codeChallenge
+  });
+
+  window.location = 'https://accounts.spotify.com/authorize?' + args;
+}
+
+async function fetchAccessToken(code) {
+  const codeVerifier = localStorage.getItem('code_verifier');
+
+  const body = new URLSearchParams({
+    client_id: clientId,
+    grant_type: 'authorization_code',
+    code: code,
+    redirect_uri: redirectUri,
+    code_verifier: codeVerifier
+  });
+
+  const resp = await fetch('https://accounts.spotify.com/api/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: body
+  });
+
+  if (!resp.ok) throw new Error("Token request failed");
+
+  const data = await resp.json();
+  localStorage.setItem('access_token', data.access_token);
+  localStorage.setItem('refresh_token', data.refresh_token);
+  localStorage.setItem('token_timestamp', Date.now().toString());
+}
+
+async function refreshAccessToken() {
+  const refreshToken = localStorage.getItem('refresh_token');
+  if (!refreshToken) throw new Error("No refresh token found");
+
+  const body = new URLSearchParams({
+    client_id: clientId,
+    grant_type: 'refresh_token',
+    refresh_token: refreshToken
+  });
+
+  const resp = await fetch('https://accounts.spotify.com/api/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: body
+  });
+
+  if (!resp.ok) throw new Error("Refresh token request failed");
+
+  const data = await resp.json();
+  localStorage.setItem('access_token', data.access_token);
+  localStorage.setItem('token_timestamp', Date.now().toString());
+}
+
+/* --------- SPOTIFY API CALLS --------- */
+async function getAccessToken() {
+  let token = localStorage.getItem('access_token');
+  const timestamp = parseInt(localStorage.getItem('token_timestamp') || "0", 10);
+  
+  if (!token) return null;
+
+  // If older than ~55 min, refresh
+  if (Date.now() - timestamp > 55 * 60 * 1000) {
+    await refreshAccessToken();
+    token = localStorage.getItem('access_token');
+  }
+
+  return token;
+}
+
+async function shuffleQueue() {
+  const btn = document.getElementById('shuffleBtn');
+  const progressContainer = document.getElementById('progressContainer');
+  const progressBar = document.getElementById('progressBar');
+
+  btn.disabled = true;
+  btn.classList.remove('success', 'error');
+  progressContainer.style.display = 'block';
+  progressBar.style.width = '0%';
+
+  try {
+    const token = await getAccessToken();
+    if (!token) throw new Error("No access token");
+
+    // Fetch playlist items
+    let allTracks = [];
+    let url = `https://api.spotify.com/v1/playlists/${playlistId}/tracks?limit=100`;
+    while (url) {
+      const resp = await fetch(url, { headers: { Authorization: 'Bearer ' + token } });
+      if (!resp.ok) throw new Error("Failed fetching playlist");
+      const data = await resp.json();
+      allTracks.push(...data.items);
+      url = data.next;
+    }
+
+    // Random indices
+    const total = allTracks.length;
+    const indices = new Set();
+    while (indices.size < 100 && indices.size < total) {
+      indices.add(Math.floor(Math.random() * total));
+    }
+    const indexArray = Array.from(indices);
+    const totalToQueue = indexArray.length;
+
+    // Queue tracks with progress
+    for (let i = 0; i < totalToQueue; i++) {
+      const uri = allTracks[indexArray[i]].track.uri;
+      const qPost = await fetch(
+        'https://api.spotify.com/v1/me/player/queue?uri=' + encodeURIComponent(uri),
+        { method: 'POST', headers: { Authorization: 'Bearer ' + token } }
+      );
+      if (!qPost.ok) throw new Error("Queueing failed at track " + i);
+
+      // Update progress bar
+      const progressPercent = ((i + 1) / totalToQueue) * 100;
+      progressBar.style.width = progressPercent + '%';
+    }
+
+    btn.classList.add('success');
+  } catch (err) {
+    console.error(err);
+    btn.classList.add('error');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+/* --------- ON PAGE LOAD --------- */
+(async function init() {
+  const params = new URLSearchParams(window.location.search);
+
+  if (params.has('code')) {
+    await fetchAccessToken(params.get('code'));
+    window.history.replaceState({}, document.title, redirectUri);
+  }
+
+  const token = await getAccessToken();
+  if (token) {
+    document.getElementById('loginBtn').style.display = 'none';
+    document.getElementById('shuffleBtn').style.display = 'inline-block';
+    document.getElementById('shuffleBtn').addEventListener('click', shuffleQueue);
+  } else {
+    document.getElementById('loginBtn').addEventListener('click', loginWithSpotify);
+  }
+})();
+</script>
 </body>
 </html>
