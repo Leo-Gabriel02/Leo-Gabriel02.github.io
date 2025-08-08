@@ -5,9 +5,11 @@
 <title>Spotify Shuffle Queue</title>
 <style>
   body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
-  button { padding: 1em 2em; font-size: 1.2em; }
+  button { padding: 1em 2em; font-size: 1.2em; margin: 10px; }
   .success { background-color: green; color: white; }
   .error { background-color: red; color: white; }
+  #progressContainer { width: 80%; height: 20px; background-color: #ddd; margin: 20px auto; border-radius: 10px; overflow: hidden; display: none; }
+  #progressBar { height: 100%; width: 0%; background-color: #4caf50; transition: width 0.2s ease; }
 </style>
 </head>
 <body>
@@ -15,6 +17,10 @@
 <h1>Spotify Shuffle Queue</h1>
 <button id="loginBtn">Login with Spotify</button>
 <button id="shuffleBtn" style="display:none;">Shuffle</button>
+
+<div id="progressContainer">
+  <div id="progressBar"></div>
+</div>
 
 <script>
 /* ---------------- CONFIG ---------------- */
@@ -125,8 +131,13 @@ async function getAccessToken() {
 
 async function shuffleQueue() {
   const btn = document.getElementById('shuffleBtn');
+  const progressContainer = document.getElementById('progressContainer');
+  const progressBar = document.getElementById('progressBar');
+
   btn.disabled = true;
   btn.classList.remove('success', 'error');
+  progressContainer.style.display = 'block';
+  progressBar.style.width = '0%';
 
   try {
     const token = await getAccessToken();
@@ -149,15 +160,21 @@ async function shuffleQueue() {
     while (indices.size < 100 && indices.size < total) {
       indices.add(Math.floor(Math.random() * total));
     }
+    const indexArray = Array.from(indices);
+    const totalToQueue = indexArray.length;
 
-    // Queue tracks
-    for (const idx of indices) {
-      const uri = allTracks[idx].track.uri;
+    // Queue tracks with progress
+    for (let i = 0; i < totalToQueue; i++) {
+      const uri = allTracks[indexArray[i]].track.uri;
       const qPost = await fetch(
         'https://api.spotify.com/v1/me/player/queue?uri=' + encodeURIComponent(uri),
         { method: 'POST', headers: { Authorization: 'Bearer ' + token } }
       );
-      if (!qPost.ok) throw new Error("Queueing failed");
+      if (!qPost.ok) throw new Error("Queueing failed at track " + i);
+
+      // Update progress bar
+      const progressPercent = ((i + 1) / totalToQueue) * 100;
+      progressBar.style.width = progressPercent + '%';
     }
 
     btn.classList.add('success');
