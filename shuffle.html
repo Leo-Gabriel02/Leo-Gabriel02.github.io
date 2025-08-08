@@ -1,181 +1,26 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Spotify Public Playlist Player</title>
+  <meta charset="utf-8">
+  <title>Spotify Public Playlist Shuffle</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 20px;
-      background: #121212;
-      color: #fff;
-    }
-    #progress-container {
-      width: 100%;
-      background: #333;
-      height: 8px;
-      border-radius: 4px;
-      overflow: hidden;
-      margin-top: 10px;
-    }
-    #progress {
-      background: #1DB954;
-      height: 8px;
-      width: 0%;
-    }
+    body { font-family: Arial, sans-serif; margin: 40px; }
+    #progress { width: 100%; height: 20px; background: #eee; margin-top: 20px; }
+    #progress-bar { height: 100%; background: #1DB954; width: 0%; }
+    #output { margin-top: 20px; }
   </style>
 </head>
 <body>
+  <h1>Spotify Playlist Shuffler</h1>
+  <button id="login-btn">Login with Spotify</button>
+  <input type="text" id="playlist-id" placeholder="Enter playlist ID">
+  <button id="shuffle-btn" disabled>Shuffle Playlist</button>
 
-  <h1>Spotify Public Playlist Player</h1>
-  <button id="loginBtn">Login with Spotify</button>
-  <input type="text" id="playlistId" placeholder="1IhKWSnFKpEn5FZgEnk5uO" />
-  <button id="loadBtn">Load Playlist</button>
+  <div id="progress">
+    <div id="progress-bar"></div>
+  </div>
+  <div id="output"></div>
 
-  <div id="trackInfo"></div>
-  <div id="progress-container"><div id="progress"></div></div>
-
-  <script>
-    // -------------------------
-    // CONFIG
-    // -------------------------
-    const clientId = "f2b3fb7dabb945c0b6938aa0d10dc295"; // Replace with your Spotify App client ID
-    const redirectUri = window.location.origin + window.location.pathname;
-    const scopes = "user-read-playback-state user-modify-playback-state playlist-read-private playlist-read-collaborative";
-
-    let accessToken = null;
-    let deviceId = null;
-    let player = null;
-    let progressInterval = null;
-
-    // -------------------------
-    // PKCE Helpers
-    // -------------------------
-    async function generateCodeVerifier(len) {
-      let text = "";
-      const possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-      for (let i = 0; i < len; i++) {
-        text += possible.charAt(Math.floor(Math.random() * possible.length));
-      }
-      return text;
-    }
-
-    async function generateCodeChallenge(codeVerifier) {
-      const data = new TextEncoder().encode(codeVerifier);
-      const digest = await crypto.subtle.digest("SHA-256", data);
-      return btoa(String.fromCharCode(...new Uint8Array(digest)))
-        .replace(/\+/g, "-")
-        .replace(/\//g, "_")
-        .replace(/=+$/, "");
-    }
-
-    function redirectToAuth() {
-      generateCodeVerifier(128).then(codeVerifier => {
-        localStorage.setItem("code_verifier", codeVerifier);
-        generateCodeChallenge(codeVerifier).then(codeChallenge => {
-          const authUrl = `https://accounts.spotify.com/authorize?response_type=code&client_id=${clientId}&scope=${encodeURIComponent(scopes)}&redirect_uri=${encodeURIComponent(redirectUri)}&code_challenge_method=S256&code_challenge=${codeChallenge}`;
-          window.location.href = authUrl;
-        });
-      });
-    }
-
-    async function fetchAccessToken(code) {
-      const codeVerifier = localStorage.getItem("code_verifier");
-
-      const params = new URLSearchParams();
-      params.append("client_id", clientId);
-      params.append("grant_type", "authorization_code");
-      params.append("code", code);
-      params.append("redirect_uri", redirectUri);
-      params.append("code_verifier", codeVerifier);
-
-      const res = await fetch("https://accounts.spotify.com/api/token", {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: params
-      });
-
-      const data = await res.json();
-      accessToken = data.access_token;
-    }
-
-    // -------------------------
-    // Player Setup
-    // -------------------------
-    window.onSpotifyWebPlaybackSDKReady = () => {
-      player = new Spotify.Player({
-        name: "Web Playback SDK Player",
-        getOAuthToken: cb => { cb(accessToken); },
-        volume: 0.5
-      });
-
-      player.addListener("ready", ({ device_id }) => {
-        deviceId = device_id;
-        console.log("Ready with Device ID", deviceId);
-      });
-
-      player.addListener("player_state_changed", state => {
-        if (!state) return;
-        const track = state.track_window.current_track;
-        document.getElementById("trackInfo").textContent = `Now playing: ${track.name} by ${track.artists.map(a => a.name).join(", ")}`;
-        updateProgressBar(state.position, state.duration);
-        if (progressInterval) clearInterval(progressInterval);
-        progressInterval = setInterval(() => {
-          updateProgressBar(state.position += 1000, state.duration);
-        }, 1000);
-      });
-
-      player.connect();
-    };
-
-    function updateProgressBar(position, duration) {
-      const progressPercent = (position / duration) * 100;
-      document.getElementById("progress").style.width = `${progressPercent}%`;
-    }
-
-    // -------------------------
-    // Playlist Control
-    // -------------------------
-    async function loadPlaylist(playlistId) {
-      const res = await fetch(`https://api.spotify.com/v1/playlists/${playlistId}/tracks`, {
-        headers: { Authorization: `Bearer ${accessToken}` }
-      });
-      if (!res.ok) {
-        alert("Could not load playlist. Make sure it’s public and you are logged in.");
-        return;
-      }
-      const data = await res.json();
-      const uris = data.items.map(item => item.track.uri);
-
-      await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`, {
-        method: "PUT",
-        body: JSON.stringify({ uris }),
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` }
-      });
-    }
-
-    // -------------------------
-    // Event Listeners
-    // -------------------------
-    document.getElementById("loginBtn").addEventListener("click", redirectToAuth);
-    document.getElementById("loadBtn").addEventListener("click", () => {
-      const playlistId = document.getElementById("playlistId").value.trim();
-      if (playlistId) loadPlaylist(playlistId);
-    });
-
-    // -------------------------
-    // Auth on Page Load
-    // -------------------------
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("code")) {
-      fetchAccessToken(params.get("code")).then(() => {
-        window.history.replaceState({}, document.title, redirectUri);
-        // Load Spotify SDK
-        const script = document.createElement("script");
-        script.src = "https://sdk.scdn.co/spotify-player.js";
-        document.body.appendChild(script);
-      });
-    }
-  </script>
-
+  <script src="shuffle.js"></script>
 </body>
 </html>
