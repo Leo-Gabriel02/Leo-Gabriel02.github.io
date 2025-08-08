@@ -1,5 +1,5 @@
 // ===== CONFIG =====
-const clientId = '1IhKWSnFKpEn5FZgEnk5uO';
+const clientId = 'f2b3fb7dabb945c0b6938aa0d10dc295';
 const redirectUri = window.location.origin + window.location.pathname; // must match Spotify App redirect URI
 const scopes = ['playlist-read-public'];
 
