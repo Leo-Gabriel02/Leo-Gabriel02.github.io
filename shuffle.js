@@ -1,7 +1,7 @@
 // ===== CONFIG =====
 const clientId = 'f2b3fb7dabb945c0b6938aa0d10dc295';
 const redirectUri = window.location.origin + window.location.pathname; // must match Spotify App redirect URI
-const scopes = ['playlist-read-public'];
+const scopes = ['user-read-playback-state user-modify-playback-state playlist-read-private playlist-read-collaborative'];
 
 // ===== PKCE Helpers =====
 async function generateCodeVerifier(length) {
